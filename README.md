@@ -36,7 +36,7 @@ Este sistema nasceu da necessidade de registrar os resultados históricos da **C
 ## 🚀 **Como Usar**
 
 1. **Baixe o Arquivo:**  
-   Salve o arquivo `.html` do ResenhaScore365 no seu computador.
+   Salve o arquivo `.html` da pasta ResenhaScore365 no seu computador. O arquivo index.html na raiz do projeto refere-se apenas a uma versão somente leitura, para expor os dados do nosso grupo.
 
 2. **Abra no Navegador:**  
    Clique duas vezes no arquivo para abrir no seu navegador de preferência (Chrome, Firefox, etc.).
