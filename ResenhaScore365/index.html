@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResenhaScore365 v5.3 - Ranking Oficial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .podium-1 { border-color: #FFD700; }
+        .podium-2 { border-color: #C0C0C0; }
+        .podium-3 { border-color: #CD7F32; }
+        .modal { transition: opacity 0.25s ease; }
+        .tab.active { border-color: #22d3ee; background-color: #0891b2; color: #ffffff; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-black text-cyan-400 tracking-tight">ResenhaScore365</h1>
+            <p class="text-lg text-gray-400 mt-2">Ranking Oficial v5.3 (Modo Leitura)</p>
+        </header>
+
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-3">Navegação de Torneios:</h2>
+            <div id="tournaments-tabs" class="flex flex-wrap gap-2 items-center">
+                <!-- Abas dos torneios são renderizadas aqui -->
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-4">
+                    <h2 id="ranking-title" class="text-2xl font-semibold">Ranking</h2>
+                    <span id="champion-display" class="text-lg font-bold text-yellow-400"></span>
+                </div>
+                <div id="ranking-table" class="space-y-3"></div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Histórico de Partidas (Visão Atual)</h2>
+                    <div class="overflow-x-auto max-h-[70vh]">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="text-left py-2 px-4">Partida / Variação de Aura</th>
+                                    <th class="text-center py-2 px-4">Placar</th>
+                                    <th class="text-center py-2 px-4">Resultado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="match-history" class="divide-y divide-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="player-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3 mb-4">
+                <h3 id="modal-player-name" class="text-2xl font-bold text-cyan-400"></h3>
+                <button id="close-modal" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="modal-player-stats"></div>
+            <h4 class="text-lg font-semibold mt-6 border-t border-gray-700 pt-4 mb-2">Histórico de Partidas (Geral)</h4>
+            <div id="modal-match-history" class="max-h-48 overflow-y-auto space-y-2 pr-2"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DADOS EMBUTIDOS ---
+            // Os dados do seu backup JSON foram inseridos aqui.
+            const STATIC_DATA = {
+  "players": [
+    {
+      "name": "Alexandre",
+      "elo": 991.2344705798323,
+      "wins": 2,
+      "losses": 2,
+      "draws": 0,
+      "goalsFor": 4,
+      "goalsAgainst": 10
+    },
+    {
+      "name": "Bichas",
+      "elo": 977.6804803884226,
+      "wins": 1,
+      "losses": 2,
+      "draws": 1,
+      "goalsFor": 4,
+      "goalsAgainst": 6
+    },
+    {
+      "name": "Bruno",
+      "elo": 984,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "goalsFor": 0,
+      "goalsAgainst": 1
+    },
+    {
+      "name": "Conrado",
+      "elo": 1028.353778419087,
+      "wins": 2,
+      "losses": 1,
+      "draws": 0,
+      "goalsFor": 8,
+      "goalsAgainst": 5
+    },
+    {
+      "name": "Fitaroni",
+      "elo": 1075.3060595959732,
+      "wins": 6,
+      "losses": 2,
+      "draws": 0,
+      "goalsFor": 19,
+      "goalsAgainst": 3
+    },
+    {
+      "name": "Francisco",
+      "elo": 1076.0350832941936,
+      "wins": 8,
+      "losses": 2,
+      "draws": 1,
+      "goalsFor": 22,
+      "goalsAgainst": 13
+    },
+    {
+      "name": "Gustavo",
+      "elo": 980.8,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "goalsFor": 1,
+      "goalsAgainst": 3
+    },
+    {
+      "name": "Kadu",
+      "elo": 984.5241162377877,
+      "wins": 6,
+      "losses": 6,
+      "draws": 0,
+      "goalsFor": 17,
+      "goalsAgainst": 17
+    },
+    {
+      "name": "Leo",
+      "elo": 939.3791020376696,
+      "wins": 0,
+      "losses": 3,
+      "draws": 0,
+      "goalsFor": 1,
+      "goalsAgainst": 8
+    },
+    {
+      "name": "Luan",
+      "elo": 972.9625297099942,
+      "wins": 0,
+      "losses": 2,
+      "draws": 0,
+      "goalsFor": 2,
+      "goalsAgainst": 3
+    },
+    {
+      "name": "Lucas",
+      "elo": 1053.9040699513885,
+      "wins": 3,
+      "losses": 1,
+      "draws": 0,
+      "goalsFor": 13,
+      "goalsAgainst": 7
+    },
+    {
+      "name": "Macario",
+      "elo": 1041.2383150398616,
+      "wins": 4,
+      "losses": 2,
+      "draws": 0,
+      "goalsFor": 14,
+      "goalsAgainst": 8
+    },
+    {
+      "name": "Nicolas",
+      "elo": 1015.9744661368885,
+      "wins": 3,
+      "losses": 2,
+      "draws": 0,
+      "goalsFor": 8,
+      "goalsAgainst": 8
+    },
+    {
+      "name": "Paulo",
+      "elo": 914.2113180920695,
+      "wins": 0,
+      "losses": 5,
+      "draws": 1,
+      "goalsFor": 3,
+      "goalsAgainst": 18
+    },
+    {
+      "name": "Puskas",
+      "elo": 1010.4099100043777,
+      "wins": 4,
+      "losses": 3,
+      "draws": 0,
+      "goalsFor": 10,
+      "goalsAgainst": 9
+    },
+    {
+      "name": "Ribas",
+      "elo": 982.522815103312,
+      "wins": 1,
+      "losses": 2,
+      "draws": 0,
+      "goalsFor": 2,
+      "goalsAgainst": 3
+    },
+    {
+      "name": "Tadeu",
+      "elo": 990.6634854091419,
+      "wins": 5,
+      "losses": 7,
+      "draws": 1,
+      "goalsFor": 14,
+      "goalsAgainst": 18
+    },
+    {
+      "name": "Vini",
+      "elo": 980.8,
+      "wins": 0,
+      "losses": 1,
+      "draws": 0,
+      "goalsFor": 1,
+      "goalsAgainst": 3
+    }
+  ],
+  "matches": [
+    {
+      "id": "match_1752984403530",
+      "tournamentId": "tourn_1752984222276",
+      "player1": "Tadeu",
+      "player2": "Kadu",
+      "score1": 3,
+      "score2": 2,
+      "winner": "Tadeu",
+      "onPenalties": false,
+      "phase": "Final",
+      "timestamp": 1752984403530,
+      "eloChange": 17.308515792231532,
+      "baseEloChange": 17.308515792231532,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752984371250",
+      "tournamentId": "tourn_1752984222276",
+      "player1": "Kadu",
+      "player2": "Luan",
+      "score1": 2,
+      "score2": 2,
+      "winner": "Kadu",
+      "onPenalties": true,
+      "phase": "Semifinal",
+      "timestamp": 1752984371250,
+      "eloChange": 7.347581909741649,
+      "baseEloChange": 7.347581909741649,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752984352282",
+      "tournamentId": "tourn_1752984222276",
+      "player1": "Bichas",
+      "player2": "Tadeu",
+      "score1": 2,
+      "score2": 4,
+      "winner": "Tadeu",
+      "onPenalties": false,
+      "phase": "Semifinal",
+      "timestamp": 1752984352282,
+      "eloChange": -21.8356573202314,
+      "baseEloChange": -18.196381100192834,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752984265179",
+      "tournamentId": "tourn_1752984222276",
+      "player1": "Kadu",
+      "player2": "Paulo",
+      "score1": 4,
+      "score2": 1,
+      "winner": "Kadu",
+      "onPenalties": false,
+      "phase": "Play-in",
+      "timestamp": 1752984265179,
+      "eloChange": 18.185575124327592,
+      "baseEloChange": 13.988903941790454,
+      "multiplierApplied": 1.3,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752984247954",
+      "tournamentId": "tourn_1752984222276",
+      "player1": "Leo",
+      "player2": "Tadeu",
+      "score1": 0,
+      "score2": 3,
+      "winner": "Tadeu",
+      "onPenalties": false,
+      "phase": "Play-in",
+      "timestamp": 1752984247954,
+      "eloChange": -22.796567162598908,
+      "baseEloChange": -17.535820894306852,
+      "multiplierApplied": 1.3,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752984077455",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Lucas",
+      "player2": "Fitaroni",
+      "score1": 2,
+      "score2": 1,
+      "winner": "Lucas",
+      "onPenalties": false,
+      "phase": "Final",
+      "timestamp": 1752984077455,
+      "eloChange": 27.212588141958992,
+      "baseEloChange": 19.437562958542138,
+      "multiplierApplied": 1.4,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1.4
+    },
+    {
+      "id": "match_1752984046614",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Fitaroni",
+      "player2": "Nicolas",
+      "score1": 4,
+      "score2": 0,
+      "winner": "Fitaroni",
+      "onPenalties": false,
+      "phase": "Semifinal",
+      "timestamp": 1752984046614,
+      "eloChange": 21.905392875353165,
+      "baseEloChange": 14.041918509841771,
+      "multiplierApplied": 1.56,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1.2
+    },
+    {
+      "id": "match_1752984029646",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Francisco",
+      "player2": "Lucas",
+      "score1": 2,
+      "score2": 3,
+      "winner": "Lucas",
+      "onPenalties": false,
+      "phase": "Semifinal",
+      "timestamp": 1752984029646,
+      "eloChange": -24.49335204334943,
+      "baseEloChange": -20.41112670279119,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1.2
+    },
+    {
+      "id": "match_1752984002469",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Nicolas",
+      "player2": "Bichas",
+      "score1": 2,
+      "score2": 0,
+      "winner": "Nicolas",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752984002469,
+      "eloChange": 19.202253950678,
+      "baseEloChange": 16.001878292231666,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752983985497",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Fitaroni",
+      "player2": "Kadu",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Fitaroni",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752983985497,
+      "eloChange": 12.400956990094603,
+      "baseEloChange": 12.400956990094603,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752983944545",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Macario",
+      "player2": "Lucas",
+      "score1": 4,
+      "score2": 3,
+      "winner": "Macario",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752983944545,
+      "eloChange": 15.642962387694737,
+      "baseEloChange": 15.642962387694737,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752983831713",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Francisco",
+      "player2": "Tadeu",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Francisco",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752983831713,
+      "eloChange": 9.374637909227655,
+      "baseEloChange": 9.374637909227655,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752983769036",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Kadu",
+      "player2": "Leo",
+      "score1": 3,
+      "score2": 0,
+      "winner": "Kadu",
+      "onPenalties": false,
+      "phase": "Play-in",
+      "timestamp": 1752983769036,
+      "eloChange": 21.824330799731538,
+      "baseEloChange": 16.78794676902426,
+      "multiplierApplied": 1.3,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752983761169",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Lucas",
+      "player2": "Paulo",
+      "score1": 5,
+      "score2": 0,
+      "winner": "Lucas",
+      "onPenalties": false,
+      "phase": "Play-in",
+      "timestamp": 1752983761169,
+      "eloChange": 17.841092153774753,
+      "baseEloChange": 13.723917041365194,
+      "multiplierApplied": 1.3,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752983733613",
+      "tournamentId": "tourn_1752983670175",
+      "player1": "Tadeu",
+      "player2": "Luan",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Tadeu",
+      "onPenalties": false,
+      "phase": "Play-in",
+      "timestamp": 1752983733613,
+      "eloChange": 19.689888380264144,
+      "baseEloChange": 19.689888380264144,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752541085579",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Francisco",
+      "player2": "Puskas",
+      "score1": 3,
+      "score2": 1,
+      "winner": "Francisco",
+      "onPenalties": false,
+      "phase": "Final",
+      "timestamp": 1752541085579,
+      "eloChange": 24.418359039762244,
+      "baseEloChange": 14.534737523668003,
+      "multiplierApplied": 1.68,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1.4
+    },
+    {
+      "id": "match_1752541062404",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Francisco",
+      "player2": "Macario",
+      "score1": 1,
+      "score2": 1,
+      "winner": "Francisco",
+      "onPenalties": true,
+      "phase": "Semifinal",
+      "timestamp": 1752541062404,
+      "eloChange": 8.239457485463477,
+      "baseEloChange": 6.866214571219565,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1.2
+    },
+    {
+      "id": "match_1752541049297",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Puskas",
+      "player2": "Kadu",
+      "score1": 2,
+      "score2": 0,
+      "winner": "Puskas",
+      "onPenalties": false,
+      "phase": "Semifinal",
+      "timestamp": 1752541049297,
+      "eloChange": 21.37114911023501,
+      "baseEloChange": 14.841075770996536,
+      "multiplierApplied": 1.44,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1.2
+    },
+    {
+      "id": "match_1752541009246",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Macario",
+      "player2": "Alexandre",
+      "score1": 6,
+      "score2": 0,
+      "winner": "Macario",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752541009246,
+      "eloChange": 20.73196678380799,
+      "baseEloChange": 15.947666756775376,
+      "multiplierApplied": 1.3,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540997309",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Francisco",
+      "player2": "Fitaroni",
+      "score1": 1,
+      "score2": 1,
+      "winner": "Francisco",
+      "onPenalties": true,
+      "phase": "Quartas de Final",
+      "timestamp": 1752540997309,
+      "eloChange": 9.301249277804779,
+      "baseEloChange": 9.301249277804779,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540986273",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Kadu",
+      "player2": "Tadeu",
+      "score1": 2,
+      "score2": 2,
+      "winner": "Kadu",
+      "onPenalties": true,
+      "phase": "Quartas de Final",
+      "timestamp": 1752540986273,
+      "eloChange": 5.297849352263821,
+      "baseEloChange": 5.297849352263821,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540966535",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Puskas",
+      "player2": "Paulo",
+      "score1": 4,
+      "score2": 2,
+      "winner": "Puskas",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752540966535,
+      "eloChange": 17.6617323865888,
+      "baseEloChange": 14.718110322157333,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540939681",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Fitaroni",
+      "player2": "Paulo",
+      "score1": 3,
+      "score2": 0,
+      "winner": "Fitaroni",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540939681,
+      "eloChange": 16.25875145817454,
+      "baseEloChange": 12.506731890903492,
+      "multiplierApplied": 1.3,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540927009",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Francisco",
+      "player2": "Kadu",
+      "score1": 3,
+      "score2": 1,
+      "winner": "Francisco",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540927009,
+      "eloChange": 17.475245167643603,
+      "baseEloChange": 14.562704306369671,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540911750",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Puskas",
+      "player2": "Tadeu",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Puskas",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540911750,
+      "eloChange": 13.97845528093298,
+      "baseEloChange": 13.97845528093298,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540897499",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Alexandre",
+      "player2": "Ribas",
+      "score1": 2,
+      "score2": 1,
+      "winner": "Alexandre",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540897499,
+      "eloChange": 16.129665324486247,
+      "baseEloChange": 16.129665324486247,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540886710",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Bichas",
+      "player2": "Alexandre",
+      "score1": 2,
+      "score2": 0,
+      "winner": "Bichas",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540886710,
+      "eloChange": 20.16322796084586,
+      "baseEloChange": 16.80268996737155,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540877819",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Macario",
+      "player2": "Tadeu",
+      "score1": 2,
+      "score2": 0,
+      "winner": "Macario",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540877819,
+      "eloChange": 16.912328075878165,
+      "baseEloChange": 14.093606729898472,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540861557",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Kadu",
+      "player2": "Puskas",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Kadu",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540861557,
+      "eloChange": 16.678854596350106,
+      "baseEloChange": 16.678854596350106,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540846635",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Fitaroni",
+      "player2": "Francisco",
+      "score1": 2,
+      "score2": 0,
+      "winner": "Fitaroni",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540846635,
+      "eloChange": 19.750582554848027,
+      "baseEloChange": 16.45881879570669,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540839085",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Francisco",
+      "player2": "Paulo",
+      "score1": 0,
+      "score2": 0,
+      "winner": null,
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540839085,
+      "eloChange": -3.358469214935262,
+      "baseEloChange": -3.358469214935262,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540830984",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Fitaroni",
+      "player2": "Puskas",
+      "score1": 3,
+      "score2": 0,
+      "winner": "Fitaroni",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540830984,
+      "eloChange": 20.704213137266745,
+      "baseEloChange": 15.926317797897497,
+      "multiplierApplied": 1.3,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540816573",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Macario",
+      "player2": "Kadu",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Macario",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540816573,
+      "eloChange": 16.990515277944176,
+      "baseEloChange": 16.990515277944176,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540807515",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Ribas",
+      "player2": "Tadeu",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Ribas",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540807515,
+      "eloChange": 15.388787221320289,
+      "baseEloChange": 15.388787221320289,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540796073",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Alexandre",
+      "player2": "Leo",
+      "score1": 2,
+      "score2": 1,
+      "winner": "Alexandre",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540796073,
+      "eloChange": 16,
+      "baseEloChange": 16,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540784087",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Bichas",
+      "player2": "Tadeu",
+      "score1": 0,
+      "score2": 0,
+      "winner": null,
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540784087,
+      "eloChange": -1.4448363015140409,
+      "baseEloChange": -1.4448363015140409,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540773242",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Kadu",
+      "player2": "Ribas",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Kadu",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540773242,
+      "eloChange": 16.736306793521994,
+      "baseEloChange": 16.736306793521994,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540764807",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Fitaroni",
+      "player2": "Macario",
+      "score1": 4,
+      "score2": 0,
+      "winner": "Fitaroni",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540764807,
+      "eloChange": 20.8,
+      "baseEloChange": 16,
+      "multiplierApplied": 1.3,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540725629",
+      "tournamentId": "tourn_1752540686857",
+      "player1": "Puskas",
+      "player2": "Paulo",
+      "score1": 2,
+      "score2": 0,
+      "winner": "Puskas",
+      "onPenalties": false,
+      "phase": "Liga",
+      "timestamp": 1752540725629,
+      "eloChange": 19.2,
+      "baseEloChange": 16,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540639394",
+      "tournamentId": "tourn_1752540165693",
+      "player1": "Francisco",
+      "player2": "Conrado",
+      "score1": 3,
+      "score2": 3,
+      "winner": "Francisco",
+      "onPenalties": true,
+      "phase": "Final",
+      "timestamp": 1752540639394,
+      "eloChange": 10.898421822775605,
+      "baseEloChange": 7.78458701626829,
+      "multiplierApplied": 1.4,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1.4
+    },
+    {
+      "id": "match_1752540625493",
+      "tournamentId": "tourn_1752540165693",
+      "player1": "Nicolas",
+      "player2": "Tadeu",
+      "score1": 2,
+      "score2": 0,
+      "winner": "Nicolas",
+      "onPenalties": false,
+      "phase": "Disputa de Terceiro Lugar",
+      "timestamp": 1752540625493,
+      "eloChange": 22.729805303426353,
+      "baseEloChange": 15.7845870162683,
+      "multiplierApplied": 1.44,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1.2
+    },
+    {
+      "id": "match_1752540595616",
+      "tournamentId": "tourn_1752540165693",
+      "player1": "Conrado",
+      "player2": "Nicolas",
+      "score1": 3,
+      "score2": 1,
+      "winner": "Conrado",
+      "onPenalties": false,
+      "phase": "Semifinal",
+      "timestamp": 1752540595616,
+      "eloChange": 23.252200241862607,
+      "baseEloChange": 16.147361279071255,
+      "multiplierApplied": 1.44,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1.2
+    },
+    {
+      "id": "match_1752540481366",
+      "tournamentId": "tourn_1752540165693",
+      "player1": "Francisco",
+      "player2": "Tadeu",
+      "score1": 5,
+      "score2": 0,
+      "winner": "Francisco",
+      "onPenalties": false,
+      "phase": "Semifinal",
+      "timestamp": 1752540481366,
+      "eloChange": 24.730116404648843,
+      "baseEloChange": 15.852638720928745,
+      "multiplierApplied": 1.56,
+      "goalMultiplier": 1.3,
+      "phaseMultiplier": 1.2
+    },
+    {
+      "id": "match_1752540470074",
+      "tournamentId": "tourn_1752540165693",
+      "player1": "Conrado",
+      "player2": "Kadu",
+      "score1": 2,
+      "score2": 1,
+      "winner": "Conrado",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752540470074,
+      "eloChange": 16,
+      "baseEloChange": 16,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540450957",
+      "tournamentId": "tourn_1752540165693",
+      "player1": "Nicolas",
+      "player2": "Gustavo",
+      "score1": 3,
+      "score2": 1,
+      "winner": "Nicolas",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752540450957,
+      "eloChange": 19.2,
+      "baseEloChange": 16,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540433876",
+      "tournamentId": "tourn_1752540165693",
+      "player1": "Francisco",
+      "player2": "Vini",
+      "score1": 3,
+      "score2": 1,
+      "winner": "Francisco",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752540433876,
+      "eloChange": 19.2,
+      "baseEloChange": 16,
+      "multiplierApplied": 1.2,
+      "goalMultiplier": 1.2,
+      "phaseMultiplier": 1
+    },
+    {
+      "id": "match_1752540387928",
+      "tournamentId": "tourn_1752540165693",
+      "player1": "Tadeu",
+      "player2": "Bruno",
+      "score1": 1,
+      "score2": 0,
+      "winner": "Tadeu",
+      "onPenalties": false,
+      "phase": "Quartas de Final",
+      "timestamp": 1752540387928,
+      "eloChange": 16,
+      "baseEloChange": 16,
+      "multiplierApplied": 1,
+      "goalMultiplier": 1,
+      "phaseMultiplier": 1
+    }
+  ],
+  "tournaments": [
+    {
+      "id": "tourn_1752540165693",
+      "name": "Copa XerecaBet do Bostil 2024",
+      "createdAt": 1752540165693,
+      "champion": "Francisco",
+      "participants": [],
+      "phases": [
+        {
+          "name": "Quartas de Final",
+          "multiplier": 1
+        },
+        {
+          "name": "Semifinal",
+          "multiplier": 1.2
+        },
+        {
+          "name": "Final",
+          "multiplier": 1.4
+        },
+        {
+          "name": "Disputa de Terceiro Lugar",
+          "multiplier": 1.2
+        }
+      ]
+    },
+    {
+      "id": "tourn_1752540686857",
+      "name": "Resenha League 2025",
+      "createdAt": 1752540686857,
+      "champion": "Francisco",
+      "participants": [],
+      "phases": [
+        {
+          "name": "Liga",
+          "multiplier": 1
+        },
+        {
+          "name": "Quartas de Final",
+          "multiplier": 1
+        },
+        {
+          "name": "Semifinal",
+          "multiplier": 1.2
+        },
+        {
+          "name": "Final",
+          "multiplier": 1.4
+        }
+      ]
+    },
+    {
+      "id": "tourn_1752983670175",
+      "name": "Mundial de Púbis 2025",
+      "createdAt": 1752983670175,
+      "champion": "Lucas",
+      "participants": [],
+      "phases": [
+        {
+          "name": "Play-in",
+          "multiplier": 1
+        },
+        {
+          "name": "Quartas de Final",
+          "multiplier": 1
+        },
+        {
+          "name": "Semifinal",
+          "multiplier": 1.2
+        },
+        {
+          "name": "Final",
+          "multiplier": 1.4
+        }
+      ]
+    },
+    {
+      "id": "tourn_1752984222276",
+      "name": "Copa Intercontinental da RIFA Lokal™ 2025",
+      "createdAt": 1752984222276,
+      "champion": "Tadeu",
+      "participants": [],
+      "phases": [
+        {
+          "name": "Play-in",
+          "multiplier": 1
+        },
+        {
+          "name": "Semifinal",
+          "multiplier": 1
+        },
+        {
+          "name": "Final",
+          "multiplier": 1
+        }
+      ]
+    }
+  ],
+  "activeView": {
+    "type": "general",
+    "id": "general",
+    "name": "Ranking Geral"
+  }
+};
+
+            // --- Estado da Aplicação ---
+            let AppState = {
+                players: [],
+                matches: [],
+                tournaments: [],
+                activeView: { type: 'general', id: 'general', name: 'Ranking Geral' }
+            };
+            
+            function getPlayerStatsForView() {
+                if (AppState.activeView.type === 'general') {
+                    // Para a visão geral, simplesmente retorna os dados dos jogadores como estão.
+                    return AppState.players.map(p => ({...p}));
+                } 
+                
+                // Para a visão de torneio, calcula as estatísticas específicas do torneio.
+                const tournamentMatches = AppState.matches.filter(m => m.tournamentId === AppState.activeView.id);
+                const participantNames = [...new Set(tournamentMatches.flatMap(m => [m.player1, m.player2]))];
+
+                let viewPlayers = participantNames.map(name => {
+                    const globalPlayer = AppState.players.find(p => p.name === name);
+                    if (!globalPlayer) return null;
+                    // Pega a Aura global, mas zera as estatísticas para calcular apenas as do torneio.
+                    return {
+                        name,
+                        elo: globalPlayer.elo,
+                        wins: 0, losses: 0, draws: 0, goalsFor: 0, goalsAgainst: 0
+                    };
+                }).filter(p => p); // Remove jogadores nulos se houver alguma inconsistência.
+                
+                tournamentMatches.forEach(match => {
+                    const p1 = viewPlayers.find(p => p.name === match.player1);
+                    const p2 = viewPlayers.find(p => p.name === match.player2);
+                    if (!p1 || !p2) return;
+
+                    p1.goalsFor += match.score1;
+                    p1.goalsAgainst += match.score2;
+                    p2.goalsFor += match.score2;
+                    p2.goalsAgainst += match.score1;
+
+                    if (match.winner) {
+                        const winner = (match.winner === p1.name) ? p1 : p2;
+                        const loser = (winner.name === p1.name) ? p2 : p1;
+                        winner.wins++;
+                        loser.losses++;
+                    } else {
+                        p1.draws++;
+                        p2.draws++;
+                    }
+                });
+                return viewPlayers;
+            }
+
+            // --- Funções de Renderização ---
+            function renderAll() {
+                renderRanking();
+                renderHistory();
+                renderTournamentTabs();
+                updateActiveTab();
+            }
+
+            function renderRanking() {
+                const table = document.getElementById('ranking-table');
+                const rankingTitle = document.getElementById('ranking-title');
+                const championDisplay = document.getElementById('champion-display');
+                
+                rankingTitle.textContent = AppState.activeView.name;
+                championDisplay.textContent = '';
+                
+                const viewPlayers = getPlayerStatsForView();
+                let tournamentChampion = null;
+
+                if (AppState.activeView.type === 'tournament') {
+                    const currentTournament = AppState.tournaments.find(t => t.id === AppState.activeView.id);
+                    if (currentTournament?.champion) {
+                        tournamentChampion = currentTournament.champion;
+                        championDisplay.textContent = `🏆 Campeão: ${tournamentChampion}`;
+                    }
+                }
+
+                if (viewPlayers.length === 0) {
+                    table.innerHTML = '<p class="text-gray-500">Nenhum jogador ou partida nesta visão.</p>';
+                    return;
+                }
+                
+                table.innerHTML = '';
+                const sortedPlayers = viewPlayers.sort((a, b) => b.elo - a.elo);
+
+                sortedPlayers.forEach((player, index) => {
+                    let podiumClass = 'border-l-4 border-gray-700';
+                    const rankToEmoji = {'1': '🏆', '2': '🥈', '3': '🥉'};
+                    let emoji = rankToEmoji[index+1] || '';
+
+                    if (index === 0) podiumClass = 'podium-1 border-l-4';
+                    if (index === 1) podiumClass = 'podium-2 border-l-4';
+                    if (index === 2) podiumClass = 'podium-3 border-l-4';
+
+                    if (player.name === tournamentChampion) emoji = '👑' + emoji;
+                    
+                    const playerElement = document.createElement('div');
+                    playerElement.className = `flex justify-between items-center bg-gray-700 p-3 rounded-lg ${podiumClass}`;
+                    playerElement.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="text-lg font-bold w-8 text-center mr-3 text-cyan-300">${index + 1}</span>
+                            <div>
+                                <span class="font-medium">${emoji} ${player.name}</span>
+                                <div class="text-xs text-gray-400">V:${player.wins} E:${player.draws} D:${player.losses}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-semibold text-lg">${Math.round(player.elo)}</span>
+                            <button data-player-name="${player.name}" class="details-btn text-xs bg-cyan-800 hover:bg-cyan-700 px-2 py-1 rounded mt-1">Detalhes</button>
+                        </div>
+                    `;
+                    table.appendChild(playerElement);
+                });
+            }
+
+            function renderHistory() {
+                const historyBody = document.getElementById('match-history');
+                const matchesForView = (AppState.activeView.type === 'general') 
+                    ? AppState.matches 
+                    : AppState.matches.filter(m => m.tournamentId === AppState.activeView.id);
+
+                if(matchesForView.length === 0) {
+                    historyBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Nenhuma partida registrada.</td></tr>';
+                    return;
+                }
+
+                historyBody.innerHTML = '';
+                matchesForView.sort((a, b) => b.timestamp - a.timestamp).forEach(match => {
+                    const row = document.createElement('tr');
+                    let resultText;
+                    let resultClass = 'font-bold text-center ';
+
+                    if(match.onPenalties){ resultText = `${match.winner} (P)`; resultClass += 'text-yellow-400';} 
+                    else if (match.winner) { resultText = match.winner; resultClass += 'text-cyan-400'; } 
+                    else { resultText = 'Empate'; resultClass += 'text-gray-400';}
+
+                    const phaseText = match.phase ? `<div class="text-xs text-gray-500">${match.phase}</div>` : '';
+                    
+                    const eloChange = match.eloChange || 0;
+                    const p1Change = Math.round(eloChange);
+                    const p1Sign = p1Change >= 0 ? '+' : '';
+                    const p1Color = p1Change >= 0 ? 'text-green-400' : 'text-red-400';
+                    const p1AuraText = `<span class="text-xs ${p1Color}">(${p1Sign}${p1Change})</span>`;
+
+                    const p2Change = -p1Change;
+                    const p2Sign = p2Change >= 0 ? '+' : '';
+                    const p2Color = p2Change >= 0 ? 'text-green-400' : 'text-red-400';
+                    const p2AuraText = `<span class="text-xs ${p2Color}">(${p2Sign}${p2Change})</span>`;
+                    
+                    row.className = 'hover:bg-gray-700/50';
+                    row.innerHTML = `
+                        <td class="py-2 px-4">
+                            <div>${match.player1} ${p1AuraText}</div>
+                            <div class="text-sm text-gray-500">vs</div>
+                            <div>${match.player2} ${p2AuraText}</div>
+                            ${phaseText}
+                        </td>
+                        <td class="py-2 px-4 text-center font-mono">${match.score1} - ${match.score2}</td>
+                        <td class="${resultClass} py-2 px-4">${resultText}</td>
+                    `;
+                    historyBody.appendChild(row);
+                });
+            }
+            
+            function renderTournamentTabs() {
+                const tabsContainer = document.getElementById('tournaments-tabs');
+                tabsContainer.innerHTML = '<button id="general-ranking-tab" data-id="general" class="tab border-2 border-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Ranking Geral</button>';
+                
+                AppState.tournaments.sort((a, b) => a.createdAt - b.createdAt).forEach(t => {
+                    const tab = document.createElement('button');
+                    tab.textContent = t.name;
+                    tab.dataset.id = t.id;
+                    tab.className = `tab border-2 border-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300`;
+                    tabsContainer.appendChild(tab);
+                });
+            }
+
+            function updateActiveTab() {
+                document.querySelectorAll('#tournaments-tabs .tab').forEach(tab => {
+                    const viewId = (AppState.activeView.type === 'general') ? 'general' : AppState.activeView.id;
+                    tab.classList.toggle('active', tab.dataset.id === viewId);
+                });
+            }
+            
+            function showPlayerDetails(playerName) {
+                const globalPlayer = AppState.players.find(p => p.name === playerName);
+                if (!globalPlayer) return;
+
+                const modal = document.getElementById('player-modal');
+                const modalName = document.getElementById('modal-player-name');
+                const modalStats = document.getElementById('modal-player-stats');
+                const modalHistory = document.getElementById('modal-match-history');
+
+                modalName.textContent = playerName;
+                
+                const totalGames = globalPlayer.wins + globalPlayer.draws + globalPlayer.losses;
+                const winRate = totalGames > 0 ? (((globalPlayer.wins + globalPlayer.draws * 0.5) / totalGames) * 100).toFixed(1) : 0;
+                const goalDiff = globalPlayer.goalsFor - globalPlayer.goalsAgainst;
+                const goalDiffSign = goalDiff >= 0 ? '+' : '';
+
+                modalStats.innerHTML = `
+                    <div class="space-y-3 text-lg">
+                        <p class="flex justify-between"><span>Ranking Aura:</span> <span class="font-bold">${Math.round(globalPlayer.elo)}</span></p>
+                        <p class="flex justify-between"><span>Partidas:</span> <span class="font-bold">${totalGames}</span></p>
+                        <p class="flex justify-between"><span>Vitórias:</span> <span class="font-bold text-green-400">${globalPlayer.wins}</span></p>
+                        <p class="flex justify-between"><span>Empates:</span> <span class="font-bold text-yellow-400">${globalPlayer.draws}</span></p>
+                        <p class="flex justify-between"><span>Derrotas:</span> <span class="font-bold text-red-400">${globalPlayer.losses}</span></p>
+                        <p class="flex justify-between"><span>Aproveitamento:</span> <span class="font-bold">${winRate}%</span></p>
+                        <p class="flex justify-between"><span>Gols Pró (GP):</span> <span class="font-bold">${globalPlayer.goalsFor}</span></p>
+                        <p class="flex justify-between"><span>Gols Contra (GC):</span> <span class="font-bold">${globalPlayer.goalsAgainst}</span></p>
+                        <p class="flex justify-between"><span>Saldo de Gols (SG):</span> <span class="font-bold">${goalDiffSign}${goalDiff}</span></p>
+                    </div>`;
+                
+                modalHistory.innerHTML = '';
+                const playerMatches = AppState.matches
+                    .filter(m => m.player1 === playerName || m.player2 === playerName)
+                    .sort((a, b) => b.timestamp - a.timestamp);
+
+                if (playerMatches.length === 0) {
+                    modalHistory.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma partida registrada.</p>';
+                } else {
+                    playerMatches.forEach(match => {
+                        const isPlayer1 = match.player1 === playerName;
+                        const opponent = isPlayer1 ? match.player2 : match.player1;
+                        const eloChange = match.eloChange || 0;
+                        const playerAuraChange = Math.round(isPlayer1 ? eloChange : -eloChange);
+                        const sign = playerAuraChange >= 0 ? '+' : '';
+                        const color = playerAuraChange >= 0 ? 'text-green-400' : 'text-red-400';
+                        const tournament = AppState.tournaments.find(t => t.id === match.tournamentId);
+                        const tournamentName = tournament ? tournament.name : 'N/A';
+
+                        const matchElement = document.createElement('div');
+                        matchElement.className = 'bg-gray-700/50 p-2 rounded';
+                        matchElement.innerHTML = `
+                            <div class="text-sm flex justify-between items-center">
+                                <span>vs ${opponent} (${match.score1}-${match.score2})</span>
+                                <span class="font-bold ${color}">${sign}${playerAuraChange}</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">${tournamentName} ${match.phase ? `- ${match.phase}`: ''}</div>`;
+                        modalHistory.appendChild(matchElement);
+                    });
+                }
+                openModal('player-modal');
+            }
+
+            function openModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('div > div').classList.remove('scale-95');
+                }, 10);
+            }
+
+            function closeModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.add('opacity-0');
+                modal.querySelector('div > div').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 250);
+            }
+
+            function switchView(newView) {
+                AppState.activeView = newView;
+                renderAll();
+            }
+
+            function initializeData() {
+                if(Object.keys(STATIC_DATA).length === 0 || !STATIC_DATA.players) {
+                     document.body.innerHTML = '<div class="text-center text-red-500 font-bold p-8">ERRO: Os dados não foram carregados. Verifique se o JSON foi colado corretamente na variável STATIC_DATA.</div>';
+                     return;
+                }
+                // Apenas atribui os dados estáticos diretamente ao estado da aplicação.
+                // Os cálculos já estão corretos no arquivo JSON.
+                AppState.players = STATIC_DATA.players;
+                AppState.matches = STATIC_DATA.matches;
+                AppState.tournaments = STATIC_DATA.tournaments;
+                
+                if (STATIC_DATA.activeView) {
+                    AppState.activeView = STATIC_DATA.activeView;
+                }
+
+                renderAll();
+            }
+
+            function setupEventListeners() {
+                document.body.addEventListener('click', (e) => {
+                    const target = e.target;
+                    const closest = (selector) => target.closest(selector);
+
+                    if (closest('.details-btn')) {
+                        showPlayerDetails(closest('.details-btn').dataset.playerName);
+                    } else if (closest('#tournaments-tabs .tab')) {
+                        const tab = closest('#tournaments-tabs .tab');
+                        const viewId = tab.dataset.id;
+                        const newView = (viewId === 'general') 
+                            ? { type: 'general', id: 'general', name: 'Ranking Geral' }
+                            : { type: 'tournament', id: viewId, name: `Torneio: ${tab.textContent}` };
+                        switchView(newView);
+                    } else if (target.id === 'close-modal' || target.id === 'player-modal') {
+                        closeModal('player-modal');
+                    }
+                });
+            }
+
+            // --- Inicialização ---
+            initializeData();
+            setupEventListeners();
+        });
+    </script>
+</body>
+</html>
