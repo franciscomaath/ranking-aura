@@ -1,3 +1,4 @@
+<div>
 <h1 class="text-3xl sm:text-4xl font-bold text-cyan-400">ResenhaScore365</h1>
 <p>O Gerenciador de Aura Oficial da Resenha</p>
 </div>
@@ -7,6 +8,7 @@ o resenhascore365 é uma plataforma completa para gerenciar campeonatos de fifa,
 este sistema nasceu da necessidade de registrar os resultados históricos da copa do brasil no EA FC 24 e da resenha league 2025, e hoje serve como o ranking oficial de "aura" do nosso grupo.
 
 ✨ Principais Funcionalidades
+
 Ranking de Aura: um sistema de ranking baseado no método científico elo, que mede a força real de cada jogador. vencer um oponente mais forte te dá mais pontos. perder para um "azarão" custa caro.
 
 Múltiplos Torneios: crie e gerencie vários campeonatos (ex: "mundial", "copa cerveja") de forma separada e organizada.
@@ -49,6 +51,6 @@ bônus de goleada: vencer por 2 gols dá um bônus de 1.2x na aura. vencer por 3
 
 bônus de fase: o admin pode criar fases (ex: "final") com um multiplicador de até 1.5x, tornando os jogos decisivos ainda mais valiosos.
 
-<div align="center">
+<div>
 feito na base do ódio e da resenha em são luís, maranhão.
 </div>
