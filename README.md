@@ -1,4 +1,3 @@
-<div align="center">
 <h1 class="text-3xl sm:text-4xl font-bold text-cyan-400">ResenhaScore365</h1>
 <p>O Gerenciador de Aura Oficial da Resenha</p>
 </div>
