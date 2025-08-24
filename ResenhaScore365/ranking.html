@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResenhaScore365 v5.2 - Gerenciador de Aura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .podium-1 { border-color: #FFD700; }
+        .podium-2 { border-color: #C0C0C0; }
+        .podium-3 { border-color: #CD7F32; }
+        .modal { transition: opacity 0.25s ease; }
+        .tab.active { border-color: #22d3ee; background-color: #0891b2; color: #ffffff; }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.75rem;
+            line-height: 1rem;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-black text-cyan-400 tracking-tight">ResenhaScore365</h1>
+            <p class="text-lg text-gray-400 mt-2">O Gerenciador de Aura Oficial v5.2</p>
+        </header>
+
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-3">Navegação de Torneios:</h2>
+            <div id="tournaments-tabs" class="flex flex-wrap gap-2 items-center">
+                <!-- Abas dos torneios são renderizadas aqui -->
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-4">
+                    <h2 id="ranking-title" class="text-2xl font-semibold">Ranking</h2>
+                    <span id="champion-display" class="text-lg font-bold text-yellow-400"></span>
+                </div>
+                <div id="ranking-table" class="space-y-3"></div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Adicionar Nova Partida</h2>
+                    <form id="add-match-form" class="space-y-4">
+                        <div>
+                            <label for="match-tournament" class="block text-sm font-medium text-gray-300">Torneio da Partida</label>
+                            <select id="match-tournament" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2"></select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="player1" class="block text-sm font-medium text-gray-300">Jogador 1</label>
+                                <select id="player1" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2"></select>
+                            </div>
+                             <div>
+                                <label for="score1" class="block text-sm font-medium text-gray-300">Placar J1</label>
+                                <input type="number" id="score1" min="0" value="0" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2">
+                            </div>
+                            <div>
+                                <label for="player2" class="block text-sm font-medium text-gray-300">Jogador 2</label>
+                                <select id="player2" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2"></select>
+                            </div>
+                             <div>
+                                <label for="score2" class="block text-sm font-medium text-gray-300">Placar J2</label>
+                                <input type="number" id="score2" min="0" value="0" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="match-phase-select" class="block text-sm font-medium text-gray-300">Fase da Partida</label>
+                            <select id="match-phase-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2"></select>
+                        </div>
+                        <div class="flex items-center mt-2">
+                            <input id="on-penalties" type="checkbox" class="h-4 w-4 rounded border-gray-500 bg-gray-700 text-cyan-600 focus:ring-cyan-500">
+                            <label for="on-penalties" class="ml-2 block text-sm text-gray-300">Decidido nos Pênaltis?</label>
+                        </div>
+                        <div id="penalty-winner-box" class="hidden mt-2">
+                            <label for="penalty-winner" class="block text-sm font-medium text-gray-300">Vencedor nos Pênaltis</label>
+                            <select id="penalty-winner" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500 text-white p-2"></select>
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Registrar Partida</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Histórico de Partidas (Visão Atual)</h2>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-700">
+                                <tr>
+                                    <th class="text-left py-2 px-4">Partida / Variação de Aura</th>
+                                    <th class="text-center py-2 px-4">Placar</th>
+                                    <th class="text-center py-2 px-4">Resultado</th>
+                                    <th class="text-right py-2 px-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="match-history" class="divide-y divide-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Gerenciamento</h2>
+                    <div class="space-y-6">
+                        <div class="border-b border-gray-700 pb-6">
+                             <h3 class="text-xl font-semibold mb-3">Dados da Aplicação</h3>
+                             <div class="flex gap-4">
+                                <button id="export-data-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Exportar Dados (.json)</button>
+                                <label for="import-data-input" class="flex-1 text-center cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                                    Importar Dados (.json)
+                                </label>
+                                <input type="file" id="import-data-input" class="hidden" accept=".json">
+                             </div>
+                        </div>
+
+                        <div class="border-b border-gray-700 pb-6">
+                            <h3 class="text-xl font-semibold mb-3">Jogadores</h3>
+                             <form id="add-player-form" class="flex items-end gap-2">
+                                <div class="flex-grow">
+                                    <label for="new-player-name" class="block text-sm font-medium text-gray-300">Adicionar Novo Jogador (Geral)</label>
+                                    <input type="text" id="new-player-name" placeholder="Ex: Zico" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2">
+                                </div>
+                                <button type="submit" class="bg-green-600 hover:bg-green-700 h-10 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Adicionar</button>
+                            </form>
+                        </div>
+
+                        <form id="add-tournament-form" class="flex items-end gap-2">
+                            <div class="flex-grow">
+                                <label for="new-tournament-name" class="block text-sm font-medium text-gray-300">Criar Novo Torneio</label>
+                                <input type="text" id="new-tournament-name" placeholder="Ex: Copa do Mundo 2026" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2">
+                            </div>
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 h-10 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Criar</button>
+                        </form>
+                        
+                        <div id="tournament-management-box" class="border-t border-gray-700 pt-4 hidden">
+                            <h3 class="text-xl font-semibold mb-3">Gerenciar Torneio Ativo</h3>
+                            <div id="phase-management" class="space-y-2 mb-4 p-3 bg-gray-900/50 rounded-lg">
+                                <h4 class="font-semibold">Fases da Competição</h4>
+                                <div id="phase-list" class="space-y-1"></div>
+                                <form id="add-phase-form" class="flex items-center gap-2 pt-2">
+                                    <input type="text" id="new-phase-name" placeholder="Nome da Fase" class="flex-grow bg-gray-700 p-2 rounded-md text-white">
+                                    <input type="number" id="new-phase-multiplier" step="0.1" min="1" max="1.5" value="1.0" class="w-24 bg-gray-700 p-2 rounded-md text-white" title="Multiplicador entre 1.0 e 1.5">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg">Add Fase</button>
+                                </form>
+                            </div>
+                            <div id="participant-management" class="mb-4">
+                                <label class="block font-semibold mb-2">Participantes</label>
+                                <div id="participant-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto bg-gray-900/50 p-3 rounded-md"></div>
+                                <button id="save-participants-btn" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Salvar Participantes</button>
+                            </div>
+                            <form id="declare-champion-form" class="flex items-end gap-2">
+                                <div class="flex-grow">
+                                    <label for="champion-select" class="block text-sm font-medium text-gray-300">Declarar Campeão</label>
+                                    <select id="champion-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500 text-white p-2"></select>
+                                </div>
+                                <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 h-10 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Coroar</button>
+                            </form>
+                        </div>
+
+                        <div class="border-t border-red-800 pt-4 mt-4">
+                             <h3 class="text-xl font-semibold mb-3">Ações de Risco</h3>
+                             <form id="remove-player-form" class="flex items-end gap-2 mb-4">
+                                <div class="flex-grow">
+                                    <label for="player-to-remove" class="block text-sm font-medium text-gray-300">Remover Jogador (se não tiver jogos)</label>
+                                    <select id="player-to-remove" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 text-white p-2"></select>
+                                </div>
+                                <button type="submit" class="bg-red-600 hover:bg-red-700 h-10 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Remover</button>
+                            </form>
+                             <button id="reset-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Resetar TUDO</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="player-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3 mb-4">
+                <h3 id="modal-player-name" class="text-2xl font-bold text-cyan-400"></h3>
+                <button id="close-modal" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="modal-player-stats"></div>
+            <h4 class="text-lg font-semibold mt-6 border-t border-gray-700 pt-4 mb-2">Histórico de Partidas (Geral)</h4>
+            <div id="modal-match-history" class="max-h-48 overflow-y-auto space-y-2 pr-2"></div>
+        </div>
+    </div>
+
+    <div id="edit-match-modal" class="modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6 transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3 mb-4">
+                <h3 class="text-2xl font-bold text-cyan-400">Editar Partida</h3>
+                <button id="close-edit-modal" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="edit-match-content" class="space-y-4">
+                <p id="edit-match-details" class="text-center text-lg"></p>
+                <div>
+                    <label for="edit-match-phase-select" class="block text-sm font-medium text-gray-300">Fase da Partida</label>
+                    <select id="edit-match-phase-select" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500 text-white p-2"></select>
+                    <input type="hidden" id="editing-match-id">
+                </div>
+                <div id="edit-aura-calculation" class="text-sm text-gray-300 bg-gray-900/50 p-3 rounded-md"></div>
+                <div class="flex justify-end">
+                    <button id="save-edit-match-btn" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Configurações Iniciais ---
+            const K_FACTOR = 32;
+            const APP_VERSION = 'v9';
+            const STARTING_ELO = 1000; // Aura inicial alterada para 1000
+            const initialPlayers = ["Francisco", "Fitaroni", "Macario", "Puskas", "Conrado", "Nicolas", "Kadu", "Alexandre", "Bichas", "Ribas", "Paulo", "Tadeu", "Leo", "Bruno", "Vini", "Gustavo"];
+            
+            // --- Estado da Aplicação ---
+            let AppState = {
+                players: [],
+                matches: [],
+                tournaments: [],
+                activeView: { type: 'general', id: null, name: 'Ranking Geral' }
+            };
+
+            // --- Lógica Principal de Cálculo ---
+            function calculateElo(p1Elo, p2Elo, score1, score2, onPenalties, winnerName, p1Name, phaseMultiplier = 1) {
+                const probP1 = 1 / (1 + Math.pow(10, (p2Elo - p1Elo) / 400));
+                
+                let scoreP1_actual;
+                if (onPenalties) scoreP1_actual = (winnerName === p1Name) ? 0.75 : 0.25;
+                else if (score1 === score2) scoreP1_actual = 0.5;
+                else scoreP1_actual = (score1 > score2) ? 1 : 0;
+
+                // Multiplicador por saldo de gols
+                let goalMultiplier = 1.0;
+                if (!onPenalties && score1 !== score2) {
+                    const marginOfVictory = Math.abs(score1 - score2);
+                    if (marginOfVictory === 2) goalMultiplier = 1.2;
+                    else if (marginOfVictory >= 3) goalMultiplier = 1.3;
+                }
+                
+                const totalMultiplier = goalMultiplier * phaseMultiplier;
+                const baseChange = K_FACTOR * (scoreP1_actual - probP1);
+                const finalChange = baseChange * totalMultiplier;
+                
+                return { finalChange, baseChange, totalMultiplier, goalMultiplier, phaseMultiplier };
+            }
+
+            function recalculateAllElos() {
+                let tempPlayers = AppState.players.map(p => ({...p, elo: STARTING_ELO, wins: 0, losses: 0, draws: 0, goalsFor: 0, goalsAgainst: 0}));
+                const sortedMatches = [...AppState.matches].sort((a,b) => a.timestamp - b.timestamp);
+
+                sortedMatches.forEach(match => {
+                    const p1 = tempPlayers.find(p => p.name === match.player1);
+                    const p2 = tempPlayers.find(p => p.name === match.player2);
+                    if (!p1 || !p2) return;
+
+                    const tournament = AppState.tournaments.find(t => t.id === match.tournamentId);
+                    const phase = tournament?.phases?.find(ph => ph.name === match.phase);
+                    const phaseMultiplier = phase ? phase.multiplier : 1;
+
+                    const { finalChange, baseChange, totalMultiplier, goalMultiplier } = calculateElo(p1.elo, p2.elo, match.score1, match.score2, match.onPenalties, match.winner, p1.name, phaseMultiplier);
+                    
+                    match.eloChange = finalChange;
+                    match.baseEloChange = baseChange;
+                    match.multiplierApplied = totalMultiplier;
+                    match.goalMultiplier = goalMultiplier;
+                    match.phaseMultiplier = phaseMultiplier;
+
+                    p1.elo += finalChange;
+                    p2.elo -= finalChange;
+                    p1.goalsFor += match.score1;
+                    p1.goalsAgainst += match.score2;
+                    p2.goalsFor += match.score2;
+                    p2.goalsAgainst += match.score1;
+
+                    if (match.winner) {
+                        const winner = (match.winner === p1.name) ? p1 : p2;
+                        const loser = (winner.name === p1.name) ? p2 : p1;
+                        winner.wins++;
+                        loser.losses++;
+                    } else {
+                        p1.draws++;
+                        p2.draws++;
+                    }
+                });
+                AppState.players = tempPlayers;
+            }
+            
+            // --- Lógica de Obtenção de Dados para a Visão Ativa ---
+            function getPlayerStatsForView() {
+                const currentTournament = AppState.tournaments.find(t => t.id === AppState.activeView.id);
+                
+                if (AppState.activeView.type === 'general' || !currentTournament) {
+                    return AppState.players.map(p => ({...p}));
+                } 
+                
+                const tournamentMatches = AppState.matches.filter(m => m.tournamentId === AppState.activeView.id);
+                
+                let participantNames = currentTournament.participants && currentTournament.participants.length > 0
+                    ? currentTournament.participants
+                    : [...new Set(tournamentMatches.flatMap(m => [m.player1, m.player2]))];
+
+                let viewPlayers = participantNames.map(name => {
+                    const globalPlayer = AppState.players.find(p => p.name === name);
+                    return {
+                        name,
+                        elo: globalPlayer ? globalPlayer.elo : STARTING_ELO,
+                        wins: 0, losses: 0, draws: 0, goalsFor: 0, goalsAgainst: 0
+                    };
+                });
+                
+                tournamentMatches.forEach(match => {
+                    const p1 = viewPlayers.find(p => p.name === match.player1);
+                    const p2 = viewPlayers.find(p => p.name === match.player2);
+                    if (!p1 || !p2) return;
+
+                    p1.goalsFor += match.score1;
+                    p1.goalsAgainst += match.score2;
+                    p2.goalsFor += match.score2;
+                    p2.goalsAgainst += match.score1;
+
+                    if (match.winner) {
+                        const winner = (match.winner === p1.name) ? p1 : p2;
+                        const loser = (winner.name === p1.name) ? p2 : p1;
+                        winner.wins++;
+                        loser.losses++;
+                    } else {
+                        p1.draws++;
+                        p2.draws++;
+                    }
+                });
+                return viewPlayers;
+            }
+
+            // --- Funções de Renderização ---
+            function renderAll() {
+                renderRanking();
+                renderHistory();
+                populateSelects();
+                renderTournamentTabs();
+                updateActiveTab();
+            }
+
+            function renderRanking() {
+                const table = document.getElementById('ranking-table');
+                const rankingTitle = document.getElementById('ranking-title');
+                const championDisplay = document.getElementById('champion-display');
+                
+                rankingTitle.textContent = AppState.activeView.name;
+                championDisplay.textContent = '';
+                
+                const viewPlayers = getPlayerStatsForView();
+                let tournamentChampion = null;
+
+                if (AppState.activeView.type === 'tournament') {
+                    const currentTournament = AppState.tournaments.find(t => t.id === AppState.activeView.id);
+                    if (currentTournament?.champion) {
+                        tournamentChampion = currentTournament.champion;
+                        championDisplay.textContent = `🏆 Campeão: ${tournamentChampion}`;
+                    }
+                    document.getElementById('tournament-management-box').style.display = 'block';
+                    renderParticipantManager();
+                    renderPhaseManager();
+                } else {
+                    document.getElementById('tournament-management-box').style.display = 'none';
+                }
+
+                if (viewPlayers.length === 0) {
+                    table.innerHTML = '<p class="text-gray-500">Nenhum jogador ou partida nesta visão.</p>';
+                    return;
+                }
+                
+                table.innerHTML = '';
+                const sortedPlayers = viewPlayers.sort((a, b) => b.elo - a.elo);
+
+                sortedPlayers.forEach((player, index) => {
+                    let podiumClass = 'border-l-4 border-gray-700';
+                    const rankToEmoji = {'1': '🏆', '2': '🥈', '3': '🥉'};
+                    let emoji = rankToEmoji[index+1] || '';
+
+                    if (index === 0) podiumClass = 'podium-1 border-l-4';
+                    if (index === 1) podiumClass = 'podium-2 border-l-4';
+                    if (index === 2) podiumClass = 'podium-3 border-l-4';
+
+                    if (player.name === tournamentChampion) emoji = '👑' + emoji;
+                    
+                    const playerElement = document.createElement('div');
+                    playerElement.className = `flex justify-between items-center bg-gray-700 p-3 rounded-lg ${podiumClass}`;
+                    playerElement.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="text-lg font-bold w-8 text-center mr-3 text-cyan-300">${index + 1}</span>
+                            <div>
+                                <span class="font-medium">${emoji} ${player.name}</span>
+                                <div class="text-xs text-gray-400">V:${player.wins} E:${player.draws} D:${player.losses}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-semibold text-lg">${Math.round(player.elo)}</span>
+                            <button data-player-name="${player.name}" class="details-btn text-xs bg-cyan-800 hover:bg-cyan-700 px-2 py-1 rounded mt-1">Detalhes</button>
+                        </div>
+                    `;
+                    table.appendChild(playerElement);
+                });
+            }
+
+            function renderHistory() {
+                const historyBody = document.getElementById('match-history');
+                const matchesForView = (AppState.activeView.type === 'general') 
+                    ? AppState.matches 
+                    : AppState.matches.filter(m => m.tournamentId === AppState.activeView.id);
+
+                if(matchesForView.length === 0) {
+                    historyBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Nenhuma partida registrada.</td></tr>';
+                    return;
+                }
+
+                historyBody.innerHTML = '';
+                matchesForView.sort((a, b) => b.timestamp - a.timestamp).forEach(match => {
+                    const row = document.createElement('tr');
+                    let resultText;
+                    let resultClass = 'font-bold text-center ';
+
+                    if(match.onPenalties){ resultText = `${match.winner} (P)`; resultClass += 'text-yellow-400';} 
+                    else if (match.winner) { resultText = match.winner; resultClass += 'text-cyan-400'; } 
+                    else { resultText = 'Empate'; resultClass += 'text-gray-400';}
+
+                    const phaseText = match.phase ? `<div class="text-xs text-gray-500">${match.phase} (x${match.phaseMultiplier})</div>` : '';
+                    
+                    const eloChange = match.eloChange || 0;
+                    const p1Change = Math.round(eloChange);
+                    const p2Change = -p1Change;
+                    const p1Sign = p1Change >= 0 ? '+' : '';
+                    const p2Sign = p2Change >= 0 ? '+' : '';
+                    const p1Color = p1Change >= 0 ? 'text-green-400' : 'text-red-400';
+                    const p2Color = p2Change >= 0 ? 'text-green-400' : 'text-red-400';
+
+                    const tooltipText = `Base: ${Math.round(match.baseEloChange)} | Bônus Gols: x${match.goalMultiplier} | Bônus Fase: x${match.phaseMultiplier}`;
+                    const p1AuraText = `<span class="text-xs ${p1Color} tooltip">${p1Sign}${p1Change}<span class="tooltiptext">${tooltipText}</span></span>`;
+                    const p2AuraText = `<span class="text-xs ${p2Color} tooltip">${p2Sign}${p2Change}<span class="tooltiptext">${tooltipText}</span></span>`;
+                    
+                    row.className = 'hover:bg-gray-700/50';
+                    row.innerHTML = `
+                        <td class="py-2 px-4">
+                            <div>${match.player1} ${p1AuraText}</div>
+                            <div class="text-sm text-gray-500">vs</div>
+                            <div>${match.player2} ${p2AuraText}</div>
+                            ${phaseText}
+                        </td>
+                        <td class="py-2 px-4 text-center font-mono">${match.score1} - ${match.score2}</td>
+                        <td class="${resultClass} py-2 px-4">${resultText}</td>
+                        <td class="py-2 px-4 text-right">
+                            <button data-match-id="${match.id}" class="edit-match-btn text-xs bg-blue-800 hover:bg-blue-700 px-2 py-1 rounded mr-2">Editar</button>
+                            <button data-match-id="${match.id}" class="remove-match-btn text-xs bg-red-800 hover:bg-red-700 px-2 py-1 rounded">Remover</button>
+                        </td>
+                    `;
+                    historyBody.appendChild(row);
+                });
+            }
+            
+            function populateSelects(matchToEdit = null) {
+                const elements = {
+                    player1: document.getElementById('player1'),
+                    player2: document.getElementById('player2'),
+                    matchTournament: document.getElementById('match-tournament'),
+                    playerToRemove: document.getElementById('player-to-remove'),
+                    championSelect: document.getElementById('champion-select'),
+                    phaseSelect: document.getElementById('match-phase-select'),
+                    editPhaseSelect: document.getElementById('edit-match-phase-select')
+                };
+
+                const currentTournament = AppState.tournaments.find(t => t.id === AppState.activeView.id);
+                const playersForDropdown = (AppState.activeView.type === 'tournament' && currentTournament?.participants.length > 0) 
+                    ? AppState.players.filter(p => currentTournament.participants.includes(p.name)) 
+                    : AppState.players;
+                const sortedByName = [...playersForDropdown].sort((a, b) => a.name.localeCompare(b.name));
+                
+                // Limpa selects
+                ['player1', 'player2', 'matchTournament', 'championSelect', 'phaseSelect', 'playerToRemove', 'editPhaseSelect'].forEach(key => {
+                    if(elements[key]) elements[key].innerHTML = '';
+                });
+
+                // Adiciona opção padrão para fases
+                elements.phaseSelect.innerHTML = '<option value="">Padrão (x1.0)</option>';
+                if(elements.editPhaseSelect) elements.editPhaseSelect.innerHTML = '<option value="">Padrão (x1.0)</option>';
+
+                // Popula jogadores para remover
+                AppState.players.sort((a,b) => a.name.localeCompare(b.name)).forEach(player => {
+                     const option = document.createElement('option');
+                     option.value = player.name;
+                     option.textContent = player.name;
+                     elements.playerToRemove.appendChild(option);
+                });
+                
+                // Popula jogadores para partidas e campeão
+                sortedByName.forEach(player => {
+                    [elements.player1, elements.player2, elements.championSelect].forEach(select => {
+                        const option = document.createElement('option');
+                        option.value = player.name;
+                        option.textContent = player.name;
+                        select.appendChild(option);
+                    });
+                });
+
+                // Popula torneios
+                AppState.tournaments.forEach(t => {
+                    const option = document.createElement('option');
+                    option.value = t.id;
+                    option.textContent = t.name;
+                    elements.matchTournament.appendChild(option);
+                });
+
+                // Popula fases
+                const tournamentForPhases = matchToEdit 
+                    ? AppState.tournaments.find(t => t.id === matchToEdit.tournamentId) 
+                    : currentTournament;
+
+                if (tournamentForPhases?.phases) {
+                    tournamentForPhases.phases.forEach(phase => {
+                        const option = document.createElement('option');
+                        option.value = phase.name;
+                        option.textContent = `${phase.name} (x${phase.multiplier})`;
+                        elements.phaseSelect.appendChild(option.cloneNode(true));
+                        if(elements.editPhaseSelect) elements.editPhaseSelect.appendChild(option.cloneNode(true));
+                    });
+                }
+                
+                // Define valores padrão/ativos
+                if (elements.player2.options.length > 1) elements.player2.selectedIndex = 1;
+                if (AppState.activeView.type === 'tournament' && AppState.tournaments.length > 0) {
+                    elements.matchTournament.value = AppState.activeView.id;
+                }
+                updatePenaltyWinnerOptions();
+            }
+            
+            function renderTournamentTabs() {
+                const tabsContainer = document.getElementById('tournaments-tabs');
+                tabsContainer.innerHTML = '<button id="general-ranking-tab" data-id="general" class="tab border-2 border-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Ranking Geral</button>';
+                
+                AppState.tournaments.sort((a, b) => a.createdAt - b.createdAt).forEach(t => {
+                    const tab = document.createElement('button');
+                    tab.textContent = t.name;
+                    tab.dataset.id = t.id;
+                    tab.className = `tab border-2 border-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300`;
+                    tabsContainer.appendChild(tab);
+                });
+            }
+
+            function updateActiveTab() {
+                document.querySelectorAll('#tournaments-tabs .tab').forEach(tab => {
+                    const viewId = (AppState.activeView.type === 'general') ? 'general' : AppState.activeView.id;
+                    tab.classList.toggle('active', tab.dataset.id === viewId);
+                });
+            }
+
+            // --- Lógica de Gerenciamento de Torneio ---
+            function renderPhaseManager() {
+                const list = document.getElementById('phase-list');
+                list.innerHTML = '';
+                const currentTournament = AppState.tournaments.find(t => t.id === AppState.activeView.id);
+                if (!currentTournament?.phases || currentTournament.phases.length === 0) {
+                    list.innerHTML = '<p class="text-xs text-gray-400">Nenhuma fase criada para este torneio.</p>';
+                    return;
+                }
+                currentTournament.phases.forEach(phase => {
+                    const item = document.createElement('div');
+                    item.className = 'flex justify-between items-center bg-gray-700/50 p-2 rounded text-sm';
+                    item.innerHTML = `
+                        <span>${phase.name} <span class="text-cyan-400">(x${phase.multiplier})</span></span>
+                        <button data-phase-name="${phase.name}" class="remove-phase-btn text-red-400 hover:text-red-300 font-bold">&times;</button>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+
+            function renderParticipantManager() {
+                const container = document.getElementById('participant-checkboxes');
+                container.innerHTML = '';
+                const currentTournament = AppState.tournaments.find(t => t.id === AppState.activeView.id);
+                if (!currentTournament) return;
+
+                const participants = currentTournament.participants || [];
+                AppState.players.sort((a,b) => a.name.localeCompare(b.name)).forEach(player => {
+                    const isChecked = participants.includes(player.name);
+                    const checkboxDiv = document.createElement('div');
+                    checkboxDiv.className = 'flex items-center';
+                    checkboxDiv.innerHTML = `
+                        <input id="part-${player.name}" type="checkbox" ${isChecked ? 'checked' : ''} data-player-name="${player.name}" class="h-4 w-4 rounded border-gray-500 bg-gray-700 text-cyan-600 focus:ring-cyan-500 participant-check">
+                        <label for="part-${player.name}" class="ml-2 block text-sm text-gray-300">${player.name}</label>
+                    `;
+                    container.appendChild(checkboxDiv);
+                });
+            }
+
+            // --- Lógica de Modais ---
+            function showPlayerDetails(playerName) {
+                const globalPlayer = AppState.players.find(p => p.name === playerName);
+                if (!globalPlayer) return;
+
+                const modal = document.getElementById('player-modal');
+                const modalName = document.getElementById('modal-player-name');
+                const modalStats = document.getElementById('modal-player-stats');
+                const modalHistory = document.getElementById('modal-match-history');
+
+                modalName.textContent = playerName;
+                
+                const totalGames = globalPlayer.wins + globalPlayer.draws + globalPlayer.losses;
+                const winRate = totalGames > 0 ? (((globalPlayer.wins + globalPlayer.draws * 0.5) / totalGames) * 100).toFixed(1) : 0;
+                const goalDiff = globalPlayer.goalsFor - globalPlayer.goalsAgainst;
+                const goalDiffSign = goalDiff >= 0 ? '+' : '';
+
+                modalStats.innerHTML = `
+                    <div class="space-y-3 text-lg">
+                        <p class="flex justify-between"><span>Ranking Aura:</span> <span class="font-bold">${Math.round(globalPlayer.elo)}</span></p>
+                        <p class="flex justify-between"><span>Partidas:</span> <span class="font-bold">${totalGames}</span></p>
+                        <p class="flex justify-between"><span>Vitórias:</span> <span class="font-bold text-green-400">${globalPlayer.wins}</span></p>
+                        <p class="flex justify-between"><span>Empates:</span> <span class="font-bold text-yellow-400">${globalPlayer.draws}</span></p>
+                        <p class="flex justify-between"><span>Derrotas:</span> <span class="font-bold text-red-400">${globalPlayer.losses}</span></p>
+                        <p class="flex justify-between"><span>Aproveitamento:</span> <span class="font-bold">${winRate}%</span></p>
+                        <p class="flex justify-between"><span>Gols Pró (GP):</span> <span class="font-bold">${globalPlayer.goalsFor}</span></p>
+                        <p class="flex justify-between"><span>Gols Contra (GC):</span> <span class="font-bold">${globalPlayer.goalsAgainst}</span></p>
+                        <p class="flex justify-between"><span>Saldo de Gols (SG):</span> <span class="font-bold">${goalDiffSign}${goalDiff}</span></p>
+                    </div>`;
+                
+                modalHistory.innerHTML = '';
+                const playerMatches = AppState.matches
+                    .filter(m => m.player1 === playerName || m.player2 === playerName)
+                    .sort((a, b) => b.timestamp - a.timestamp);
+
+                if (playerMatches.length === 0) {
+                    modalHistory.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma partida registrada.</p>';
+                } else {
+                    playerMatches.forEach(match => {
+                        const isPlayer1 = match.player1 === playerName;
+                        const opponent = isPlayer1 ? match.player2 : match.player1;
+                        const eloChange = match.eloChange || 0;
+                        const playerAuraChange = Math.round(isPlayer1 ? eloChange : -eloChange);
+                        const sign = playerAuraChange >= 0 ? '+' : '';
+                        const color = playerAuraChange >= 0 ? 'text-green-400' : 'text-red-400';
+                        const tournament = AppState.tournaments.find(t => t.id === match.tournamentId);
+                        const tournamentName = tournament ? tournament.name : 'N/A';
+
+                        const matchElement = document.createElement('div');
+                        matchElement.className = 'bg-gray-700/50 p-2 rounded';
+                        matchElement.innerHTML = `
+                            <div class="text-sm flex justify-between items-center">
+                                <span>vs ${opponent} (${match.score1}-${match.score2})</span>
+                                <span class="font-bold ${color}">${sign}${playerAuraChange}</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">${tournamentName} ${match.phase ? `- ${match.phase}`: ''}</div>`;
+                        modalHistory.appendChild(matchElement);
+                    });
+                }
+                openModal('player-modal');
+            }
+            
+            function showEditMatchModal(matchId) {
+                const match = AppState.matches.find(m => m.id === matchId);
+                if (!match) return;
+
+                document.getElementById('edit-match-details').textContent = `${match.player1} ${match.score1} x ${match.score2} ${match.player2}`;
+                document.getElementById('editing-match-id').value = matchId;
+                
+                populateSelects(match);
+                document.getElementById('edit-match-phase-select').value = match.phase || '';
+
+                updateEditAuraPreview();
+                openModal('edit-match-modal');
+            }
+
+            function updateEditAuraPreview() {
+                const matchId = document.getElementById('editing-match-id').value;
+                const match = AppState.matches.find(m => m.id === matchId);
+                if (!match) return;
+
+                const newPhaseName = document.getElementById('edit-match-phase-select').value;
+                const tournament = AppState.tournaments.find(t => t.id === match.tournamentId);
+                const newPhase = tournament?.phases?.find(p => p.name === newPhaseName);
+                const newPhaseMultiplier = newPhase ? newPhase.multiplier : 1;
+
+                const p1 = AppState.players.find(p => p.name === match.player1);
+                const p2 = AppState.players.find(p => p.name === match.player2);
+                
+                // Para ter a aura correta ANTES da partida, precisamos recalcular até aquele ponto
+                const elosBeforeMatch = getElosBeforeMatch(matchId);
+
+                const { finalChange } = calculateElo(elosBeforeMatch[p1.name], elosBeforeMatch[p2.name], match.score1, match.score2, match.onPenalties, match.winner, p1.name, newPhaseMultiplier);
+                
+                const previewDiv = document.getElementById('edit-aura-calculation');
+                previewDiv.innerHTML = `
+                    <p>Aura Original: <span class="font-mono ${match.eloChange > 0 ? 'text-green-400' : 'text-red-400'}">${Math.round(match.eloChange)}</span></p>
+                    <p>Nova Aura (com fase '${newPhaseName || 'Padrão'}'): <span class="font-mono ${finalChange > 0 ? 'text-green-400' : 'text-red-400'}">${Math.round(finalChange)}</span></p>
+                `;
+            }
+
+            function getElosBeforeMatch(matchId) {
+                let tempPlayers = AppState.players.reduce((acc, p) => ({...acc, [p.name]: STARTING_ELO}), {});
+                const sortedMatches = [...AppState.matches].sort((a,b) => a.timestamp - b.timestamp);
+
+                for (const m of sortedMatches) {
+                    if (m.id === matchId) break;
+                    
+                    const p1Elo = tempPlayers[m.player1];
+                    const p2Elo = tempPlayers[m.player2];
+
+                    const tournament = AppState.tournaments.find(t => t.id === m.tournamentId);
+                    const phase = tournament?.phases?.find(ph => ph.name === m.phase);
+                    const phaseMultiplier = phase ? phase.multiplier : 1;
+
+                    const { finalChange } = calculateElo(p1Elo, p2Elo, m.score1, m.score2, m.onPenalties, m.winner, m.player1, phaseMultiplier);
+                    
+                    tempPlayers[m.player1] += finalChange;
+                    tempPlayers[m.player2] -= finalChange;
+                }
+                return tempPlayers;
+            }
+
+            function openModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('div > div').classList.remove('scale-95');
+                }, 10);
+            }
+
+            function closeModal(modalId) {
+                const modal = document.getElementById(modalId);
+                modal.classList.add('opacity-0');
+                modal.querySelector('div > div').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 250);
+            }
+
+            // --- Funções Auxiliares e de Estado ---
+            function updatePenaltyWinnerOptions() {
+                const p1Name = document.getElementById('player1').value;
+                const p2Name = document.getElementById('player2').value;
+                const penaltyWinnerSelect = document.getElementById('penalty-winner');
+                penaltyWinnerSelect.innerHTML = '';
+
+                [p1Name, p2Name].forEach(name => {
+                    if(name) {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name;
+                        penaltyWinnerSelect.appendChild(opt);
+                    }
+                });
+            }
+
+            function switchView(newView) {
+                AppState.activeView = newView;
+                localStorage.setItem(`eloActiveView_${APP_VERSION}`, JSON.stringify(newView));
+                renderAll();
+            }
+
+            function saveData() {
+                localStorage.setItem(`eloTrackerData_${APP_VERSION}`, JSON.stringify(AppState));
+            }
+
+            function loadData() {
+                const savedData = localStorage.getItem(`eloTrackerData_${APP_VERSION}`);
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData);
+                    AppState.players = parsedData.players || [];
+                    AppState.matches = parsedData.matches || [];
+                    AppState.tournaments = parsedData.tournaments || [];
+                } else {
+                    AppState.players = initialPlayers.map(name => ({ name, elo: STARTING_ELO, wins: 0, losses: 0, draws: 0, goalsFor: 0, goalsAgainst: 0 }));
+                }
+                const savedView = localStorage.getItem(`eloActiveView_${APP_VERSION}`);
+                if(savedView) {
+                    const parsedView = JSON.parse(savedView);
+                    if (parsedView.type === 'general' || AppState.tournaments.some(t => t.id === parsedView.id)) {
+                        AppState.activeView = parsedView;
+                    }
+                }
+                recalculateAllElos();
+                renderAll();
+            }
+
+            // --- Configuração de Event Listeners ---
+            function setupEventListeners() {
+                // Event Delegation para cliques
+                document.body.addEventListener('click', (e) => {
+                    const target = e.target;
+                    const closest = (selector) => target.closest(selector);
+
+                    if (closest('.details-btn')) showPlayerDetails(closest('.details-btn').dataset.playerName);
+                    else if (closest('.edit-match-btn')) showEditMatchModal(closest('.edit-match-btn').dataset.matchId);
+                    else if (closest('.remove-match-btn')) removeMatch(closest('.remove-match-btn').dataset.matchId);
+                    else if (closest('#tournaments-tabs .tab')) switchView({type: closest('.tab').dataset.id === 'general' ? 'general' : 'tournament', id: closest('.tab').dataset.id, name: closest('.tab').textContent});
+                    else if (target.id === 'reset-button') handleReset();
+                    else if (target.id === 'export-data-btn') handleExport();
+                    else if (target.id === 'close-modal' || target.id === 'player-modal') closeModal('player-modal');
+                    else if (target.id === 'close-edit-modal' || target.id === 'edit-match-modal') closeModal('edit-match-modal');
+                    else if (target.id === 'save-edit-match-btn') handleSaveEditMatch();
+                    else if (target.id === 'save-participants-btn') handleSaveParticipants();
+                    else if (closest('.remove-phase-btn')) handleRemovePhase(closest('.remove-phase-btn').dataset.phaseName);
+                });
+
+                // Event Delegation para submissões de formulário
+                document.body.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const formId = e.target.id;
+                    if (formId === 'add-match-form') handleAddMatch();
+                    else if (formId === 'add-player-form') handleAddPlayer();
+                    else if (formId === 'remove-player-form') handleRemovePlayer();
+                    else if (formId === 'declare-champion-form') handleDeclareChampion();
+                    else if (formId === 'add-tournament-form') handleAddTournament();
+                    else if (formId === 'add-phase-form') handleAddPhase();
+                });
+
+                // Event Delegation para mudanças
+                document.body.addEventListener('change', (e) => {
+                    const targetId = e.target.id;
+                    if (targetId === 'import-data-input') handleImport(e);
+                    if (targetId === 'on-penalties') document.getElementById('penalty-winner-box').classList.toggle('hidden', !e.target.checked);
+                    if (['player1', 'player2', 'match-tournament'].includes(targetId)) {
+                        updatePenaltyWinnerOptions();
+                        if(targetId === 'match-tournament') populateSelects();
+                    }
+                    if (targetId === 'edit-match-phase-select') updateEditAuraPreview();
+                });
+            }
+
+            // --- Funções de Manipulação de Eventos (Handlers) ---
+            function handleAddMatch() {
+                const tournamentId = document.getElementById('match-tournament').value;
+                if (!tournamentId) { alert("Por favor, selecione um torneio."); return; }
+                
+                const p1Name = document.getElementById('player1').value;
+                const p2Name = document.getElementById('player2').value;
+                if (p1Name === p2Name) { alert('Os jogadores devem ser diferentes.'); return; }
+
+                const score1 = parseInt(document.getElementById('score1').value);
+                const score2 = parseInt(document.getElementById('score2').value);
+                const onPenalties = document.getElementById('on-penalties').checked;
+                const phase = document.getElementById('match-phase-select').value;
+                
+                let winnerName = null;
+                if (onPenalties) {
+                    if (score1 !== score2) { alert("Para pênaltis, o placar do tempo normal deve ser igual."); return; }
+                    winnerName = document.getElementById('penalty-winner').value;
+                } else if (score1 > score2) winnerName = p1Name;
+                else if (score2 > score1) winnerName = p2Name;
+
+                AppState.matches.push({ id: `match_${Date.now()}`, tournamentId, player1: p1Name, player2: p2Name, score1, score2, winner: winnerName, onPenalties, phase, timestamp: Date.now() });
+                
+                recalculateAllElos();
+                saveData();
+                renderAll();
+                document.getElementById('add-match-form').reset();
+                document.getElementById('on-penalties').dispatchEvent(new Event('change'));
+                document.getElementById('match-tournament').value = tournamentId;
+                alert(`Partida registrada!`);
+            }
+
+            function handleAddPlayer() {
+                const input = document.getElementById('new-player-name');
+                const newName = input.value.trim();
+                if (!newName) { alert('Insira um nome.'); return; }
+                if (AppState.players.some(p => p.name.toLowerCase() === newName.toLowerCase())) { alert('Jogador já existe.'); return; }
+                
+                AppState.players.push({ name: newName, elo: STARTING_ELO, wins: 0, losses: 0, draws: 0, goalsFor: 0, goalsAgainst: 0 });
+                saveData();
+                renderAll();
+                input.value = '';
+                alert(`Jogador "${newName}" adicionado!`);
+            }
+            
+            function handleRemovePlayer() {
+                const playerName = document.getElementById('player-to-remove').value;
+                if (!playerName) return;
+                if (AppState.matches.some(m => m.player1 === playerName || m.player2 === playerName)) {
+                    alert(`Não é possível remover "${playerName}" pois ele já tem partidas. Remova as partidas primeiro.`);
+                    return;
+                }
+                if (confirm(`Tem certeza que deseja remover "${playerName}"?`)) {
+                    AppState.players = AppState.players.filter(p => p.name !== playerName);
+                    saveData();
+                    renderAll();
+                    alert(`Jogador "${playerName}" removido.`);
+                }
+            }
+
+            function handleAddTournament() {
+                const input = document.getElementById('new-tournament-name');
+                const newName = input.value.trim();
+                if (!newName) { alert('Insira um nome para o torneio.'); return; }
+                if (AppState.tournaments.some(t => t.name.toLowerCase() === newName.toLowerCase())) { alert('Torneio já existe.'); return; }
+
+                const newTournament = { id: `tourn_${Date.now()}`, name: newName, createdAt: Date.now(), champion: null, participants: [], phases: [] };
+                AppState.tournaments.push(newTournament);
+                saveData();
+                switchView({type: 'tournament', id: newTournament.id, name: `Torneio: ${newName}`});
+                input.value = '';
+            }
+            
+            function handleDeclareChampion() {
+                if (AppState.activeView.type !== 'tournament') return;
+                const championName = document.getElementById('champion-select').value;
+                const tournamentIndex = AppState.tournaments.findIndex(t => t.id === AppState.activeView.id);
+                if (tournamentIndex > -1) {
+                    AppState.tournaments[tournamentIndex].champion = championName;
+                    saveData();
+                    renderAll();
+                    alert(`"${championName}" foi coroado campeão!`);
+                }
+            }
+            
+            function handleAddPhase() {
+                if (AppState.activeView.type !== 'tournament') return;
+                const nameInput = document.getElementById('new-phase-name');
+                const multInput = document.getElementById('new-phase-multiplier');
+                const name = nameInput.value.trim();
+                const multiplier = parseFloat(multInput.value);
+
+                if(!name || !multiplier || multiplier < 1 || multiplier > 1.5) {
+                    alert("Nome inválido ou multiplicador fora do intervalo (1.0 a 1.5).");
+                    return;
+                }
+                
+                const tourneyIndex = AppState.tournaments.findIndex(t => t.id === AppState.activeView.id);
+                if(tourneyIndex > -1) {
+                    const tourney = AppState.tournaments[tourneyIndex];
+                    if (!tourney.phases) tourney.phases = [];
+                    if (tourney.phases.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                        alert("Uma fase com este nome já existe.");
+                        return;
+                    }
+                    tourney.phases.push({ name, multiplier });
+                    saveData();
+                    renderAll();
+                    nameInput.value = '';
+                    multInput.value = '1.0';
+                }
+            }
+
+            function handleRemovePhase(phaseName) {
+                const tourneyIndex = AppState.tournaments.findIndex(t => t.id === AppState.activeView.id);
+                if (tourneyIndex > -1) {
+                    const tourney = AppState.tournaments[tourneyIndex];
+                    const hasMatchesInPhase = AppState.matches.some(m => m.tournamentId === tourney.id && m.phase === phaseName);
+                    if (hasMatchesInPhase && !confirm("Esta fase já tem partidas. Removê-la irá recalcular a aura de todo o sistema. Continuar?")) {
+                        return;
+                    }
+                    tourney.phases = tourney.phases.filter(p => p.name !== phaseName);
+                    recalculateAllElos();
+                    saveData();
+                    renderAll();
+                }
+            }
+
+            function handleSaveParticipants() {
+                if (AppState.activeView.type !== 'tournament') return;
+                const newParticipants = Array.from(document.querySelectorAll('.participant-check:checked')).map(cb => cb.dataset.playerName);
+                const tournamentIndex = AppState.tournaments.findIndex(t => t.id === AppState.activeView.id);
+                if (tournamentIndex > -1) {
+                    AppState.tournaments[tournamentIndex].participants = newParticipants;
+                    saveData();
+                    renderAll();
+                    alert("Lista de participantes salva!");
+                }
+            }
+
+            function handleSaveEditMatch() {
+                const matchId = document.getElementById('editing-match-id').value;
+                const newPhase = document.getElementById('edit-match-phase-select').value;
+                const matchIndex = AppState.matches.findIndex(m => m.id === matchId);
+                if (matchIndex > -1) {
+                    AppState.matches[matchIndex].phase = newPhase;
+                    recalculateAllElos();
+                    saveData();
+                    renderAll();
+                    closeModal('edit-match-modal');
+                    alert("Partida atualizada e Aura recalculada!");
+                }
+            }
+            
+            function removeMatch(matchId) {
+                if (!confirm("Remover esta partida? A Aura de todos será recalculada.")) return;
+                AppState.matches = AppState.matches.filter(m => m.id !== matchId);
+                recalculateAllElos();
+                saveData();
+                renderAll();
+            }
+
+            function handleReset() {
+                const confirmText = 'RESETAR TUDO';
+                if (prompt(`Para apagar TODOS os dados, digite "${confirmText}"`) === confirmText) {
+                    localStorage.removeItem(`eloTrackerData_${APP_VERSION}`);
+                    localStorage.removeItem(`eloActiveView_${APP_VERSION}`);
+                    window.location.reload();
+                } else {
+                    alert('Confirmação incorreta.');
+                }
+            }
+
+            function handleExport() {
+                const dataStr = JSON.stringify(AppState, null, 2);
+                const blob = new Blob([dataStr], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `resenha_score_backup_${new Date().toISOString().slice(0,10)}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+
+            function handleImport(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        if (confirm("Importar dados? Isso irá sobrescrever os dados atuais.")) {
+                            AppState = { ...AppState, ...importedData };
+                            recalculateAllElos();
+                            saveData();
+                            switchView({ type: 'general', id: 'general', name: 'Ranking Geral' });
+                            alert("Dados importados!");
+                        }
+                    } catch (err) {
+                        alert("Erro ao ler o arquivo. Verifique se é um .json válido.");
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            }
+
+            // --- Inicialização ---
+            setupEventListeners();
+            loadData();
+        });
+    </script>
+</body>
+</html>
